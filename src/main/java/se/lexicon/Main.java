@@ -1,33 +1,59 @@
 package se.lexicon;
 
 import java.util.Scanner;
-
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
+        
+        System.out.printf("Calculator%n");
         boolean run = true;
         Scanner scanner = new Scanner(System.in);
         while (run) {
-            System.out.printf("Calculator%n");
-            System.out.printf("Enter calculus: ");
+            System.out.println();
+                System.out.printf("Enter your first number: ");
+                if (scanner.hasNext("X")) {
+                    run = false;
+                    continue;
+                }
+                double num1 = scanner.nextDouble();
+                System.out.print("Enter operator (+, -, *, /): ");
+                String operator = scanner.next();
+                System.out.printf("Enter your second number: ");
+                double num2 = scanner.nextDouble();
 
+            switch (operator) {
+                case "+":
+                    System.out.println();
+                    System.out.printf("Result: %.2f%n", num1 + num2);
+                    break;
+                case "-":
+                    System.out.println();
+                    System.out.printf("Result: %.2f%n", num1 - num2);
+                    break;
+                case "*":
+                    System.out.println();
+                    System.out.printf("Result: %.2f%n", num1 * num2);
+                    break;
+                case "/":
+                    System.out.println();
+                    System.out.printf("Result: %.2f%n", num1 / num2);
+                    break;
+                default:
+                    System.out.println("Invalid operator.");
+                    break;
+            }
             scanner.nextLine();
-
-            int choice = scanner.nextInt();
-
-            if (choice == 0) run = false;
+            System.out.printf("%n Run again [ENTER] | exit [X] : ");
+            System.out.println();
+            System.out.println();
+            System.out.println();
+            System.out.println();
+            System.out.println();
+            String exitInput = scanner.nextLine();
+            if (exitInput.equalsIgnoreCase("exit")) {
+                run = false;
+            }
         }
-        System.out.printf("Exiting...");
-        //Basic calculation
-        // add. sub. mult. div.
-
-        // need to read numbers with nextDouble()?
-        // requires input
-        // read only nuumbers or operators
-        // able to perform multiple operations and exit
-
-        // handle/print errors
-        // advanced; square, eqvations, constants, physics etc.
-        // Simple GUI. (Swing, JAVAFX)
-        }
+        scanner.close();
+        System.out.printf("Calculator closed.%n");
     }
+}
