@@ -15,7 +15,6 @@ public class Main {
     private static final Map<String, Double> VARIABLES = new LinkedHashMap<>();
     private static final Map<String, String> VARIABLE_EXPRESSIONS = new LinkedHashMap<>();
     private static final List<String> HISTORY = new ArrayList<>();
-    private static double ANS = 0.0;
     private static final Pattern ASSIGN = Pattern.compile("^\\s*([A-Za-z][A-Za-z0-9_]*)\\s*=\\s*(.+)\\s*$");
     
     /*
@@ -31,10 +30,10 @@ public class Main {
         VARIABLES.put("ans", 0.0);
     }
 
-    public static class FunctionEvaluator {
+    private static class FunctionEvaluator {
         public static double evaluateMathString(String expressionString) {
             ExpressionBuilder builder = new ExpressionBuilder(expressionString);
-            if (VARIABLES.size() > 0) {
+            if (!VARIABLES.isEmpty()) {
                 builder = builder.variables(VARIABLES.keySet()); // Tells exp4j about variable names
             }
             Expression expression = builder.build();
@@ -51,7 +50,7 @@ public class Main {
         
         while (run) {
             System.out.printf("%n");
-            System.out.printf("'''''CALCULATOR MENU'''''%n");
+            System.out.printf("     'MAIN MENU'%n");
             System.out.printf("[1] Simple Calculator%n");
             System.out.printf("[2] Complex Calculator%n");
             System.out.printf("[V] View Variables%n");
@@ -75,7 +74,7 @@ public class Main {
             }
         }
         scanner.close();
-        System.out.printf("%n'''''Calculator Closed'''''%n%n");
+        System.out.printf("%n       'Closed...'%n%n");
     }
 
     private static void simpleCalculator(Scanner scanner) {
@@ -83,7 +82,7 @@ public class Main {
 
             while (continueCalculation) {
                 System.out.printf("%n");
-                System.out.printf("'''''SIMPLE CALCULATOR'''''%n");
+                System.out.printf("     'SIMPLE CALCULATOR'%n");
                 System.out.printf("Enter first number or variable:%n> ");
                 String input1 = scanner.next();
                 Double num1 = parseOperand(input1);
@@ -157,39 +156,13 @@ public class Main {
                     System.out.printf("  Result: %.2f%n", result);
                     saveResult(String.format("%.2f %s %.2f", num1, displayOperator, num2), result);
                     System.out.printf("%n");
-                    assignPrompt(scanner, result);
                 }
 
             scanner.nextLine();
-            boolean menuActive = true;
-            while (menuActive) {
-                System.out.printf("%n[R] Repeat | [S] Store | [V] Variables | [H] History | [M] Menu | [X] Exit%n> ");
-                String choice = scanner.nextLine().trim().toUpperCase();
-                switch (choice) {
-                    case "R":
-                        menuActive = false; // Exits menu
-                        break;
-                    case "S":
-                        assignPrompt(scanner, result);
-                        break;
-                    case "V":
-                        printVariables();
-                        break;
-                    case "H":
-                        printHistory();
-                        break;
-                    case "M":
-                        continueCalculation = false;
-                        menuActive = false;
-                        break;
-                    case "X":
-                        System.out.printf("Exiting Calculator.%n");
-                        System.exit(0);
-                        break;
-                    default:
-                        System.out.println("Invalid choice.");
-                        break;
-                }
+            // Post-calculation menu loop
+            boolean repeat = postCalculationMenu(scanner, result);
+            if (!repeat) {
+                continueCalculation = false;
             }
         }
     }
@@ -200,7 +173,7 @@ public class Main {
 
         while (continueCalculation) {
             System.out.printf("%n");
-            System.out.printf("'''''COMPLEX CALCULATOR'''''%n");
+            System.out.printf("     'COMPLEX CALCULATOR'%n");
             System.out.printf("Operators: + - * / ^ ( )%n");
             System.out.printf("Commands: 'variables' | 'history'%n");
             System.out.printf("%n> ");
@@ -254,7 +227,7 @@ public class Main {
 
                 result = evaluationResult;
 
-                String displayExpression = formatWithSuperscripts(line);
+                String displayExpression = formatWithSuperscripts(expandVariables(line));
 
                 saveResult(line, result);
                 System.out.printf("%n  %s = %.2f%n", displayExpression, result);
@@ -262,37 +235,12 @@ public class Main {
             }
 
             if (calculationSuccess) {
-            boolean menuActive = true;
-            while (menuActive) {
-                System.out.printf("%n[R] Repeat | [S] Store | [V] Variables | [H] History | [M] Menu | [X] Exit%n> ");
-                String choice = scanner.nextLine().trim().toUpperCase();
-                switch (choice) {
-                    case "R":
-                        menuActive = false; // Exits menu
-                        break;
-                    case "S":
-                        assignPrompt(scanner, result);
-                        break;
-                    case "V":
-                        printVariables();
-                        break;
-                    case "H":
-                        printHistory();
-                        break;
-                    case "M":
-                        continueCalculation = false;
-                        menuActive = false;
-                        break;
-                    case "X":
-                        System.out.printf("%n'''''Exiting Calculator'''''%n");
-                        System.exit(0);
-                        break;
-                    default:
-                        System.out.printf("%nError: Invalid choice. Please try again.%n");
-                        break;
+                // Post-calculation menu loop
+                boolean repeat = postCalculationMenu(scanner, result);
+                if (!repeat) {
+                    continueCalculation = false;
                 }
             }
-        }
     }
 }
 
@@ -321,7 +269,7 @@ private static Double safeEvaluate(String expression) {
 
     private static void printVariables() {
         System.out.printf("%n");
-        System.out.printf("'''''STORED VARIABLES'''''%n");
+        System.out.printf("     'STORED VARIABLES'%n");
         if (VARIABLES.isEmpty()) {
             System.out.printf("  (none)%n");
         } else {
@@ -334,7 +282,7 @@ private static Double safeEvaluate(String expression) {
 
     private static void printHistory() {
         System.out.printf("%n");
-        System.out.printf("'''''CALCULATION HISTORY'''''%n");
+        System.out.printf("     'CALCULATION HISTORY'%n");
         if (HISTORY.isEmpty()) {
             System.out.printf("  (empty)%n");
         } else {
@@ -349,7 +297,6 @@ private static Double safeEvaluate(String expression) {
         String historyEntry = String.format("%s = %.2f", expression, result);
         HISTORY.add(historyEntry);
         VARIABLES.put("ans", result);
-        ANS = result;
     }
 
     private static void assignPrompt(Scanner scanner, double result) {
@@ -360,8 +307,48 @@ private static Double safeEvaluate(String expression) {
             System.out.printf("%nError: Invalid variable name (must start with letter).%n");
             return;
         }
+        if (VARIABLES.containsKey(variableName)) {
+            System.out.printf("%nWarning: Variable '%s' will be overwritten.%n", variableName);
+            System.out.printf("%nPress [ENTER] to confirm or [C] to abort:%n> ");
+            String confirmation = scanner.nextLine().trim();
+            if (confirmation.equalsIgnoreCase("C")) {
+                System.out.printf("%nAborted.%n");
+                return;
+            }
+        }
         VARIABLES.put(variableName, result);
         System.out.printf("%n  Assigned: %s = %.2f%n", variableName, result);
+    }
+
+    private static boolean postCalculationMenu(Scanner scanner, double result) {
+        boolean menuActive = true;
+        while (menuActive) {
+            System.out.printf("%n[R] Repeat | [S] Store | [V] Variables | [H] History | [M] Menu | [X] Exit%n> ");
+            String choice = scanner.nextLine().trim().toUpperCase();
+            switch (choice) {
+                case "R":
+                    return true; // Exits menu and repeats
+                case "S":
+                    assignPrompt(scanner, result);
+                    break;
+                case "V":
+                    printVariables();
+                    break;
+                case "H":
+                    printHistory();
+                    break;
+                case "M":
+                    return false; // Back to main
+                case "X":
+                    System.out.printf("%n       'Exiting...'%n");
+                    System.exit(0);
+                    break;
+                default:
+                    System.out.printf("%nError: Invalid choice. Please try again.%n");
+                    break;
+            }
+        }
+        return false;
     }
 
     private static String formatWithSuperscripts(String expression) {
@@ -392,16 +379,16 @@ private static Double safeEvaluate(String expression) {
 }
 
 
+// TODO add exp4j math functions sin cos tan log sqrt etc
+// TODO constants like pi and e
+// TODO add more scientific notation for large/small numbers
+
+
 // SUGGESTIONS:
-// 1. Add ability to delete variables (e.g., "del a" or "delete a")
-// 2. Add ability to clear all variables or history (e.g., "clear vars", "clear history")
 // 3. Support negative numbers in simple calculator (currently -5 might be interpreted incorrectly)
 // 5. Save/load calculator state to file (variables + history persistence)
-// 6. Add more mathematical functions: sin, cos, tan, sqrt, log, etc. (exp4j supports these)
-// 6.1 Add constants like pi and e
 // 7. Show variable expressions when viewing variables (not just values)
 // 8. Add color coding for output (errors in red, results in green) using ANSI codes
 // 9. Add unit tests for core functionality
 // 10. Add input validation to prevent buffer overflow on very long expressions
-// 11. Consider adding scientific notation support for very large/small numbers
 // 12. Add keyboard shortcuts or aliases (e.g., "?" for help, "q" for quit)
