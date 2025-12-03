@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import net.objecthunter.exp4j.Expression;
@@ -33,10 +34,20 @@ public class Main {
     private static class FunctionEvaluator {
         public static double evaluateMathString(String expressionString) {
             ExpressionBuilder builder = new ExpressionBuilder(expressionString);
+            
+            // Add mathematical constants
+            builder = builder.variables(Set.of("pi", "e"));
+            
             if (!VARIABLES.isEmpty()) {
                 builder = builder.variables(VARIABLES.keySet()); // Tells exp4j about variable names
             }
+            
             Expression expression = builder.build();
+            
+            // Set constant values
+            expression.setVariable("pi", Math.PI);
+            expression.setVariable("e", Math.E);
+            
             for (Map.Entry<String, Double> entry : VARIABLES.entrySet()) {
                 expression.setVariable(entry.getKey(), entry.getValue()); // Replaces variable names with their actual values
             }
@@ -175,6 +186,8 @@ public class Main {
             System.out.printf("%n");
             System.out.printf("     'COMPLEX CALCULATOR'%n");
             System.out.printf("Operators: + - * / ^ ( )%n");
+            System.out.printf("Functions: sin cos tan sqrt log abs floor ceil%n");
+            System.out.printf("Constants: pi, e%n");
             System.out.printf("Commands: 'variables' | 'history'%n");
             System.out.printf("%n> ");
             String line = scanner.nextLine().trim();
@@ -287,7 +300,7 @@ private static Double safeEvaluate(String expression) {
             System.out.printf("  (empty)%n");
         } else {
             for (int i = 0; i < HISTORY.size(); i++) {
-                System.out.printf("  %d) %s%n", i + 1, HISTORY.get(i));
+                System.out.printf("  h%d) %s%n", i + 1, HISTORY.get(i));
             }
         }
         System.out.printf("%n");
@@ -296,6 +309,11 @@ private static Double safeEvaluate(String expression) {
     private static void saveResult(String expression, double result) {
         String historyEntry = String.format("%s = %.2f", expression, result);
         HISTORY.add(historyEntry);
+        
+        // Auto-assigns to history variable h++
+        String historyVarName = "h" + HISTORY.size();
+        VARIABLES.put(historyVarName, result);
+        
         VARIABLES.put("ans", result);
     }
 
@@ -379,16 +397,13 @@ private static Double safeEvaluate(String expression) {
 }
 
 
-// TODO add exp4j math functions sin cos tan log sqrt etc
-// TODO constants like pi and e
-// TODO add more scientific notation for large/small numbers
-
-
 // SUGGESTIONS:
-// 3. Support negative numbers in simple calculator (currently -5 might be interpreted incorrectly)
+// unit converter (temperature, length, weight, etc)
+// more constants
 // 5. Save/load calculator state to file (variables + history persistence)
 // 7. Show variable expressions when viewing variables (not just values)
 // 8. Add color coding for output (errors in red, results in green) using ANSI codes
 // 9. Add unit tests for core functionality
 // 10. Add input validation to prevent buffer overflow on very long expressions
+// 11. Add degree-to-radian conversion for trig functions (currently uses radians)
 // 12. Add keyboard shortcuts or aliases (e.g., "?" for help, "q" for quit)
